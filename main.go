@@ -7,11 +7,18 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
+
+	"github.com/gorilla/mux"
 )
 
 // hello world, the web server
 func HelloServer(w http.ResponseWriter, req *http.Request) {
 	io.WriteString(w, "hello, world!\n")
+}
+
+func Index(w http.ResponseWriter, req *http.Request) {
+	io.WriteString(w, "I am the index!\n")
 }
 
 func main() {
@@ -30,13 +37,17 @@ func main() {
 		}
 	}
 
-	http.HandleFunc("/hello", HelloServer)
+	router := mux.NewRouter()
+	router.HandleFunc("/hello", HelloServer)
+	router.HandleFunc("/", Index)
+
+	srv := http.Server{
+		Handler:      router,
+		Addr:         fmt.Sprintf(":%d", port),
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
 
 	fmt.Printf("Starting web service on port %d", port)
-	log.Fatal(
-		http.ListenAndServe(
-			fmt.Sprintf(":%d", port),
-			nil,
-		),
-	)
+	log.Fatal(srv.ListenAndServe())
 }
